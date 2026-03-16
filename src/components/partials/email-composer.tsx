@@ -348,14 +348,20 @@ export default function EmailComposer() {
     setStatus("sending");
 
     const toFinal = isGovMode ? GOV_FIXED_TO : (values.to || "").trim();
+    const fromEmail = `${values.fromUser}@${values.fromOrg}.${values.ext}`;
+    const ccList = (values.cc || "")
+      .split(",")
+      .map((email) => email.trim())
+      .filter(Boolean);
+    const bccList = (values.bcc || "")
+      .split(",")
+      .map((email) => email.trim())
+      .filter(Boolean);
 
     const formData = new FormData();
 
     formData.append("fromName", values.fromName);
-    formData.append(
-      "from",
-      `${values.fromUser}@${values.fromOrg}.${values.ext}`
-    );
+    formData.append("fromEmail", fromEmail);
     formData.append("to", toFinal);
 
     if (isGovMode && (values.forwardTo || "").trim()) {
@@ -364,8 +370,8 @@ export default function EmailComposer() {
 
     if (values.replyTo?.trim())
       formData.append("replyTo", values.replyTo.trim());
-    if (values.cc?.trim()) formData.append("cc", values.cc.trim());
-    if (values.bcc?.trim()) formData.append("bcc", values.bcc.trim());
+    ccList.forEach((email) => formData.append("cc[]", email));
+    bccList.forEach((email) => formData.append("bcc[]", email));
 
     formData.append("subject", values.subject);
 
@@ -387,10 +393,10 @@ export default function EmailComposer() {
 
     console.group("📤 EMAIL SEND (FormData)");
     console.log("toFinal:", toFinal);
-    console.log("from:", `${values.fromUser}@${values.fromOrg}.${values.ext}`);
+    console.log("fromEmail:", fromEmail);
     console.log("subject:", values.subject);
-    console.log("cc:", values.cc);
-    console.log("bcc:", values.bcc);
+    console.log("cc:", ccList);
+    console.log("bcc:", bccList);
     console.log("replyTo:", values.replyTo);
     console.log(
       "attachments:",
